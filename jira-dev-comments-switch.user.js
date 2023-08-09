@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jira dev comments switch
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Adds switch to Jira Navigation to hide dev comments
 // @author       Thomas
 // @match        https://*.atlassian.net/jira/*
@@ -95,7 +95,7 @@
     body:not(.dev-comment-switch-active) [data-test-id="issue.activity.comments-list"] > div:has([data-testid="issue-comment-base.ui.comment.grid-content-container"]) {
         height: 0;
         overflow: hidden;
-        border-top: 2px solid rgb(var(--red));
+        border-top: 2px solid rgb(var(--dcs-red));
         width: 100px;
     }
     </style>
