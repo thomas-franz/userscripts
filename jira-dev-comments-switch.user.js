@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Jira dev comments switch
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Adds switch to Jira Navigation to hide dev comments
 // @author       Thomas
-// @match        https://*.atlassian.net/jira/*
+// @match        https://*.atlassian.net/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=atlassian.net
 // @grant        none
 // ==/UserScript==
