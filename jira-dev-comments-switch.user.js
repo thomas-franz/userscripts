@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jira dev comments switch
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  Adds switch to Jira Navigation to hide dev comments
 // @author       Thomas
 // @match        https://*.atlassian.net/*
@@ -90,12 +90,12 @@
         transform: translateX(calc(var(--w) - 100%));
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='crimson' viewBox='0 0 16 16'%3E%3Cpath d='M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.2 8a13.1 13.1 0 0 1 1.6-2c1.3-1.3 3-2.5 5.2-2.5 2.1 0 3.9 1.2 5.2 2.5a13.1 13.1 0 0 1 1.6 2s0 .2-.2.3L13.2 10A7.5 7.5 0 0 1 8 12.5 7.5 7.5 0 0 1 2.8 10a13.1 13.1 0 0 1-1.6-2z'/%3E%3Cpath d='M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z'/%3E%3C/svg%3E");
     }
-
-    body:not(.dev-comment-switch-active) [data-test-id="issue.activity.comments-list"] > div:has([data-testid="issue-comment-base.ui.comment.grid-content-container"]) {
+    body:not(.dev-comment-switch-active) [data-test-id="issue.activity.comments-list"] > div:not(.dcs-visible) {
         height: 0;
         overflow: hidden;
-        border-top: 6px dotted rgb(var(--dcs-red));
-        width: 64px;
+        border-top: 6px dotted rgb(255, 255, 255, 0.2);
+        width: 1px;
+        color: transparent;
     }
     </style>
     `;
@@ -107,6 +107,22 @@
     const bodyClass = 'dev-comment-switch-active';
     const navEl = document.querySelector('header nav');
     const storage_key = 'dcs';
+
+    const polling = () => {
+        setTimeout(() => {
+            const commentEls = document.querySelectorAll('[data-test-id="issue.activity.comments-list"] > div');
+            commentEls.forEach((commentEl) => {
+                const isDevComment = commentEl.querySelector('[data-testid="issue-comment-base.ui.comment.grid-content-container"]');
+                if(!isDevComment) {
+                    commentEl.classList.add('dcs-visible');
+                };
+            });
+            polling();
+        }, 3000);
+    };
+    polling();
+
+
     let dcs_state = JSON.parse(localStorage.getItem(storage_key));
 
     const set_dcs__state = (state) => {
