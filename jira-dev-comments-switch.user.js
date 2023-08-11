@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jira dev comments switch
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.6
 // @description  Adds switch to Jira Navigation to hide dev comments
 // @author       Thomas
 // @match        https://*.atlassian.net/*
@@ -29,25 +29,6 @@
         height: 0;
         width: 0;
         visibility: hidden;
-    }
-
-    body:after {
-        --spread: 40vw;
-        content: '';
-        display: block;
-        pointer-events: none;
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 999;
-        transition: box-shadow 0.2s;
-        box-shadow: inset 0 0 var(--spread) rgba(var(--dcs-blue), 0.25);
-    }
-
-    body.dev-comment-switch-active:after {
-        box-shadow: inset 0 0 var(--spread) rgba(var(--dcs-red), 0.5);
     }
 
     .dev-comment-switch label {
