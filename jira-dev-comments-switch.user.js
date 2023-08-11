@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jira dev comments switch
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  Adds switch to Jira Navigation to hide dev comments
 // @author       Thomas
 // @match        https://*.atlassian.net/*
@@ -108,21 +108,6 @@
     const navEl = document.querySelector('header nav');
     const storage_key = 'dcs';
 
-    const polling = () => {
-        setTimeout(() => {
-            const commentEls = document.querySelectorAll('[data-test-id="issue.activity.comments-list"] > div');
-            commentEls.forEach((commentEl) => {
-                const isDevComment = commentEl.querySelector('[data-testid="issue-comment-base.ui.comment.grid-content-container"]');
-                if(!isDevComment) {
-                    commentEl.classList.add('dcs-visible');
-                };
-            });
-            polling();
-        }, 3000);
-    };
-    polling();
-
-
     let dcs_state = JSON.parse(localStorage.getItem(storage_key));
 
     const set_dcs__state = (state) => {
@@ -140,8 +125,6 @@
     }
 
     if (navEl) {
-
-
         const inputEl = document.createElement('input');
         inputEl.setAttribute('type', 'checkbox');
         inputEl.setAttribute('id', 'dev-comment-switch');
@@ -159,4 +142,52 @@
 
         set_dcs__state(dcs_state);
     }
+
+    const showNonDevComments = (listEl) => {
+        const commentEls = listEl.querySelectorAll(':scope > div');
+        commentEls.forEach((commentEl) => {
+            const commentHeader = commentEl.querySelector('[data-testid$="-header"]');
+
+            if (commentHeader) {
+                const isDevComment = commentHeader.innerText.includes('Developers (migrated)');
+                if(!isDevComment) {
+                    commentEl.classList.add('dcs-visible');
+                };
+            } else {
+                console.error('no comment header found...');
+            }
+        });
+    };
+
+    const commentsObserver = new MutationObserver((mutationList, observer) => {
+        showNonDevComments(mutationList[0].target);
+    });
+
+    const observeListEl = (listEl) => {
+        if (!listEl.alreadyObserved) {
+            console.log('observing', listEl);
+            listEl.alreadyObserved = true;
+            commentsObserver.observe(listEl, { childList: true });
+            showNonDevComments(listEl);
+        }
+    };
+
+    const listsObserver = new MutationObserver((mutationList, observer) => {
+        for (const mutation of mutationList) {
+            if (mutation.target.getAttribute('data-test-id') == "issue.activity.comments-list") {
+                const listEl = mutation.target;
+                observeListEl(listEl);
+            }
+        }
+    });
+
+    const listElsOnInit = document.querySelectorAll('[data-test-id="issue.activity.comments-list"]');
+    listElsOnInit.forEach((listEl) => {
+        observeListEl(listEl);
+    });
+
+
+    const body = document.querySelector('body');
+    listsObserver.observe(body, { childList: true, subtree: true });
+
 })();
