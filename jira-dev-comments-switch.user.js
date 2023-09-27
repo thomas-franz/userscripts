@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jira dev comments switch
 // @namespace    http://tampermonkey.net/
-// @version      1.6
+// @version      1.7
 // @description  Adds switch to Jira Navigation to hide dev comments
 // @author       Thomas
 // @match        https://*.atlassian.net/*
@@ -23,6 +23,7 @@
         display: flex;
         align-items: center;
         padding-right: 8px;
+        border-bottom: 1px solid var(--ds-border);
     }
 
     .dev-comment-switch input[type=checkbox] {
@@ -78,6 +79,12 @@
         width: 1px;
         color: transparent;
     }
+    #ak-jira-navigation {
+      display: flex;
+    }
+    #ak-jira-navigation header {
+      flex-grow: 1;
+    }
     </style>
     `;
 
@@ -86,7 +93,7 @@
         .insertAdjacentHTML('beforeend', styling);
 
     const bodyClass = 'dev-comment-switch-active';
-    const navEl = document.querySelector('header nav');
+    const headerEl = document.querySelector('#ak-jira-navigation');
     const storage_key = 'dcs';
 
     let dcs_state = JSON.parse(localStorage.getItem(storage_key));
@@ -105,7 +112,7 @@
         set_dcs__state(false);
     }
 
-    if (navEl) {
+    if (headerEl) {
         const inputEl = document.createElement('input');
         inputEl.setAttribute('type', 'checkbox');
         inputEl.setAttribute('id', 'dev-comment-switch');
@@ -119,7 +126,7 @@
         containerEl.classList.add('dev-comment-switch');
         containerEl.appendChild(inputEl);
         containerEl.appendChild(labelEl);
-        navEl.appendChild(containerEl);
+        headerEl.appendChild(containerEl);
 
         set_dcs__state(dcs_state);
     }
