@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jira dev comments switch
 // @namespace    http://tampermonkey.net/
-// @version      1.10
+// @version      1.11
 // @description  Adds switch to Jira Navigation to hide dev comments
 // @author       Thomas
 // @match        https://*.atlassian.net/*
@@ -25,7 +25,7 @@
         position: fixed;
         right: 0.5rem;
         top: 0.75rem;
-        z-index: 99999;
+        z-index: 511;
     }
 
     .dev-comment-switch input[type=checkbox] {
