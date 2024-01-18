@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jira dev comments switch
 // @namespace    http://tampermonkey.net/
-// @version      1.12
+// @version      1.2
 // @description  Adds switch to Jira Navigation to hide dev comments
 // @author       Thomas
 // @match        https://*.atlassian.net/*
@@ -9,10 +9,10 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
     const styling = `
-    <style>
+        <style>
 
     :root {
         --dcs-red: 237, 20, 61;
@@ -74,8 +74,17 @@
         transform: translateX(calc(var(--w) - 100%));
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='crimson' viewBox='0 0 16 16'%3E%3Cpath d='M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.2 8a13.1 13.1 0 0 1 1.6-2c1.3-1.3 3-2.5 5.2-2.5 2.1 0 3.9 1.2 5.2 2.5a13.1 13.1 0 0 1 1.6 2s0 .2-.2.3L13.2 10A7.5 7.5 0 0 1 8 12.5 7.5 7.5 0 0 1 2.8 10a13.1 13.1 0 0 1-1.6-2z'/%3E%3Cpath d='M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z'/%3E%3C/svg%3E");
     }
-    body:not(.dev-comment-switch-active) [data-test-id="issue.activity.comments-list"] > div:not(.dcs-visible),
-    body:not(.dev-comment-switch-active) [data-testid="issue.activity.comments-list"] > div:not(.dcs-visible){
+
+    body:not(.dev-comment-switch-active)
+    [data-test-id="issue.activity.comments-list"] > div:has(
+        [data-test-id^="issue-comment-base.ui.comment.ak-comment"] > span > div >
+        [data-test-id="issue-comment-base.ui.comment.grid-content-container"]
+    ),
+    body:not(.dev-comment-switch-active)
+    [data-testid="issue.activity.comments-list"] > div:has(
+        [data-testid^="issue-comment-base.ui.comment.ak-comment"] > span > div >
+        [data-testid="issue-comment-base.ui.comment.grid-content-container"]
+    ){
         height: 0;
         overflow: hidden;
         border-top: 6px dotted rgb(120, 120, 120, 0.5);
@@ -89,9 +98,7 @@
     </style>
     `;
 
-    document
-        .querySelector('head')
-        .insertAdjacentHTML('beforeend', styling);
+    document.querySelector('head').insertAdjacentHTML('beforeend', styling);
 
     const bodyClass = 'dev-comment-switch-active';
     const headerEl = document.querySelector('#ak-jira-navigation');
@@ -104,12 +111,10 @@
         localStorage.setItem(storage_key, state);
         if (state) document.body.classList.add(bodyClass);
         else document.body.classList.remove(bodyClass);
-
-        console.log(state);
     };
 
     if (dcs_state === null) {
-        console.log('not existing, set dcs state initially');
+        console.warn('not existing, set dcs state initially');
         set_dcs__state(false);
     }
 
@@ -118,7 +123,9 @@
         inputEl.setAttribute('type', 'checkbox');
         inputEl.setAttribute('id', 'dev-comment-switch');
         inputEl.checked = dcs_state;
-        inputEl.addEventListener('click', (e) => set_dcs__state(e.target.checked));
+        inputEl.addEventListener('click', (e) =>
+            set_dcs__state(e.target.checked)
+        );
 
         const labelEl = document.createElement('label');
         labelEl.setAttribute('for', 'dev-comment-switch');
@@ -132,52 +139,4 @@
 
         set_dcs__state(dcs_state);
     }
-
-    const showNonDevComments = (listEl) => {
-        const commentEls = listEl.querySelectorAll(':scope > div');
-        commentEls.forEach((commentEl) => {
-            const commentHeader = commentEl.querySelector('[data-testid$="-header"]');
-
-            if (commentHeader) {
-                const isDevComment = commentHeader.innerText.includes('Developers (migrated)');
-                if(!isDevComment) {
-                    commentEl.classList.add('dcs-visible');
-                };
-            } else {
-                console.error('no comment header found...');
-            }
-        });
-    };
-
-    const commentsObserver = new MutationObserver((mutationList, observer) => {
-        showNonDevComments(mutationList[0].target);
-    });
-
-    const observeListEl = (listEl) => {
-        if (!listEl.alreadyObserved) {
-            console.log('observing', listEl);
-            listEl.alreadyObserved = true;
-            commentsObserver.observe(listEl, { childList: true });
-            showNonDevComments(listEl);
-        }
-    };
-
-    const listsObserver = new MutationObserver((mutationList, observer) => {
-        for (const mutation of mutationList) {
-            if (mutation.target.getAttribute('data-testid') == "issue.activity.comments-list") {
-                const listEl = mutation.target;
-                observeListEl(listEl);
-            }
-        }
-    });
-
-    const listElsOnInit = document.querySelectorAll('[data-testid="issue.activity.comments-list"]');
-    listElsOnInit.forEach((listEl) => {
-        observeListEl(listEl);
-    });
-
-
-    const body = document.querySelector('body');
-    listsObserver.observe(body, { childList: true, subtree: true });
-
 })();
